@@ -425,7 +425,8 @@ function MeshLineMaterial( parameters ) {
 'uniform float useAlphaMap;',
 'uniform float useDash;',
 'uniform vec2 dashArray;',
-'uniform float visibility;',
+'uniform float visibilityStart;',
+'uniform float visibilityEnd;',
 'uniform float alphaTest;',
 'uniform vec2 repeat;',
 '',
@@ -443,7 +444,7 @@ function MeshLineMaterial( parameters ) {
 '	 	 ',
 '	 }',
 '    gl_FragColor = c;',
-'	 gl_FragColor.a *= step(vCounters,visibility);',
+'	 gl_FragColor.a *= step(visibilityStart, vCounters) * step(vCounters, visibilityEnd);',
 '}' ];
 
 	function check( v, d ) {
@@ -468,7 +469,8 @@ function MeshLineMaterial( parameters ) {
 	this.far = check( parameters.far, 1 );
 	this.dashArray = check( parameters.dashArray, [] );
 	this.useDash = ( this.dashArray !== [] ) ? 1 : 0;
-	this.visibility = check( parameters.visibility, 1 );
+	this.visibilityStart = check( parameters.visibilityStart, 0 );
+	this.visibilityEnd = check( parameters.visibilityEnd, 1 );
 	this.alphaTest = check( parameters.alphaTest, 0 );
 	this.repeat = check( parameters.repeat, new THREE.Vector2( 1, 1 ) );
 
@@ -487,7 +489,8 @@ function MeshLineMaterial( parameters ) {
 			far: { type: 'f', value: this.far },
 			dashArray: { type: 'v2', value: new THREE.Vector2( this.dashArray[ 0 ], this.dashArray[ 1 ] ) },
 			useDash: { type: 'f', value: this.useDash },
-			visibility: {type: 'f', value: this.visibility},
+			visibilityStart: {type: 'f', value: this.visibilityStart},
+			visibilityEnd: {type: 'f', value: this.visibilityEnd},
 			alphaTest: {type: 'f', value: this.alphaTest},
 			repeat: { type: 'v2', value: this.repeat }
 		},
@@ -539,7 +542,8 @@ MeshLineMaterial.prototype.copy = function ( source ) {
 	this.far = source.far;
 	this.dashArray.copy( source.dashArray );
 	this.useDash = source.useDash;
-	this.visibility = source.visibility;
+	this.visibilityStart = source.visibilityStart;
+	this.visibilityEnd = source.visibilityEnd;
 	this.alphaTest = source.alphaTest;
 	this.repeat.copy( source.repeat );
 
