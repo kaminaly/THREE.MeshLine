@@ -243,6 +243,92 @@ MeshLine.prototype.advance = function(position) {
 
 };
 
+/**
+ * update positions and width with params which are the same as setGeometry.
+ */
+MeshLine.prototype.updateGeometry = function(g, c) {
+	if (!this.attributes) throw new Error( 'MeshLine.updateGeometry was called before MeshLine.setGeometry.' )
+
+	var positions = this.attributes.position.array;
+	var previous = this.attributes.previous.array;
+	var next = this.attributes.next.array;
+	var width = this.attributes.width.array;
+	var l = positions.length;
+	var positionsNeedsUpdate = false
+
+	if( g instanceof THREE.Geometry ) {
+		if(g.vertices.length * 6 == l) {
+			for( var j = 0; j < g.vertices.length; j++) {
+				var v = g.vertices[ j ];
+				var i = j * 6;
+				positions[ i ] = v.x;
+				positions[ i + 1 ] = v.y;
+				positions[ i + 2 ] = v.z;
+				positions[ i + 3 ] = v.x;
+				positions[ i + 4 ] = v.y;
+				positions[ i + 5 ] = v.z;
+			}
+			positionsNeedsUpdate = true;
+		}
+	}
+
+	else if ( g instanceof THREE.BufferGeometry ) {
+		// read attribute positions ?
+	}
+
+	else if( g instanceof Float32Array || g instanceof Array ) {
+		if(g.length * 2 == l) {
+			for( var j = 0; j < g.length; j += 3 ) {
+				var i = j * 2;
+				positions[ i ] = g[ j ];
+				positions[ i + 1 ] = g[ j + 1 ];
+				positions[ i + 2 ] = g[ j + 2 ];
+				positions[ i + 3 ] = g[ j ];
+				positions[ i + 4 ] = g[ j + 1 ];
+				positions[ i + 5 ] = g[ j + 2 ];
+			}
+			positionsNeedsUpdate = true;
+		}
+	}
+
+	if(positionsNeedsUpdate) {
+		var v;
+		var pl = l / 6;
+
+		//
+		if( this.compareV3( 0, pl - 1 ) ){
+			v = this.copyV3( pl - 2 );
+		} else {
+			v = this.copyV3( 0 );
+		}
+		memcpy( v.concat(v), 0, previous, 0, 6 );
+		memcpy( positions, 0, previous, 6, l - 6 );
+
+		//
+		if( this.compareV3( pl - 1, 0 ) ){
+			v = this.copyV3( 1 );
+		} else {
+			v = this.copyV3( pl - 1 );
+		}
+		memcpy( positions, 6, next, 0, l - 6 );
+		memcpy( v.concat(v), 0, next, l - 6, 6 );
+
+		this.attributes.position.needsUpdate = true;
+		this.attributes.previous.needsUpdate = true;
+		this.attributes.next.needsUpdate = true;
+	}
+
+	if(c) {
+		var wl = l / 6;
+		for( var j = 0; j < wl; j++ ) {
+			var w = c( j / ( wl - 1 ) );
+			width[j * 2] = w;
+			width[j * 2 + 1] = w;
+		}
+		this.attributes.width.needsUpdate = true;
+	}
+};
+
 function MeshLineMaterial( parameters ) {
 
 	var vertexShaderSource = [
